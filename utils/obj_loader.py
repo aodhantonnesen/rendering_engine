@@ -59,7 +59,24 @@ def load_obj(file_path):
     with open(file_path, 'r') as f:
         for line in f:
             if line.startswith('mtllib '):
-                materials.extend(load_mat(Path("models") / f"{line[7:]}.mtl"))
+                materials.extend(load_mat(Path("models") / f"{line[7:-1]}"))
+            elif line.startswith('v '):
+                tmp = line[2:]
+                tmp = tmp.split(" ")
+                for n in tmp:
+                    vertices.append(float(n))
+            elif line.startswith('vn '):
+                tmp = line[3:]
+                tmp = tmp.split(" ")
+                for n in tmp:
+                    normals.append(float(n))
+            elif line.startswith('vt '):
+                tmp = line[3:]
+                tmp = tmp.split(" ")
+                for n in tmp:
+                    textures.append(float(n))
+            elif line.startswith('usemtl '):
+                pass #TODO: figure out how to do this next bit
         pass
 
 
@@ -96,3 +113,4 @@ def load_mat(file_path):                        # This was tested, works beautif
 def load_model(name):   # This function should be the function that is called from outside.
     return load_obj(Path("models") / f"{name}.obj") # TODO: change this such that it calls another function with the return of load_obj, not just return load_obj's return
 
+load_model("Cube")
