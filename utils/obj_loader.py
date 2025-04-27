@@ -12,14 +12,28 @@ from pathlib import Path
 # materials <- see below 
 #   EX: "newmtl,Blue,Ns,250.000000,Kd,0.148594,0.146037,0.800126"
 #   If a material has multiples values (rgb, or something else), only the first value will be predated with a title.
-#   To get a particular materials, split the string on commas, then iterate until you find the title you are looking for, and then read until another title appears.
+#   To get a particular materials, split the string on commas, then iterate until you find the title you are looking for, 
+#   and then read until another title appears.
 #
-# The next major function will take the output of the first function as an input, and will return an interleaved numpy array as we will pass it to OpenGL
+# The next major function will take the output of the first function as an input, and will return an interleaved numpy array 
+# as we will pass it to OpenGL
 # The reason we want to hide this all away inside this seperate file 
-# is so that we can (temporarily) pretend some of this data (that we should be parsing) is not there or is a lot easier to deal with.
-#
-#
-# 
+# is so that we can (temporarily) pretend some of this data (that we should be parsing) is not there
+# or hardcode it with simple values
+
+def material_as_list(materials, name):
+    pass
+
+def interleave(vertices, textures, normals, faces, materials):
+    # We want the interleave to be in the following format:
+    # v0, t0, n0, Ns0, KaR0, KaG0, KaB0, KdR0, KdG0, KdB0, KsR0, KsG0, KsB0, KeR0, KeG0, KeB0, Ni0, d0, v1, t1...
+    # most of this data is not useful at the moment, but we will parse it all so we don't have to come back
+    for face in faces:
+        for i in range(3):
+            print(i)
+        pass
+    pass
+
 
 def load_obj(file_path):
     # This function takes a file path to a .obj and does a few things
@@ -116,13 +130,7 @@ def load_obj(file_path):
                         tmptex.append(vert[1])
                         tmpnorm.append(vert[2])
                     faces.append([tmpvert, tmptex, tmpnorm, current_mat])
-                    print(faces)
-
-                # TODO: Write code to parse the vertex data
-                pass
-
-
-        pass
+    return vertices, textures, normals, faces, materials
 
 
 def load_mat(file_path):                        # This was tested, works beautifully. DO NOT CHANGE WITHOUT TESTING
@@ -158,4 +166,7 @@ def load_mat(file_path):                        # This was tested, works beautif
 def load_model(name):   # This function should be the function that is called from outside.
     return load_obj(Path("models") / f"{name}.obj") # TODO: change this such that it calls another function with the return of load_obj, not just return load_obj's return
 
-load_model("Cube")
+
+a ,b ,c, d, e = load_model("Cube")
+
+interleave(a, b, c, d, e)
