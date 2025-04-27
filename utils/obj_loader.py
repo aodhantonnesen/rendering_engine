@@ -56,8 +56,13 @@ def load_obj(file_path):
 
     # The "materials" list will be a list of strings, as described above.
 
+    current_mat = None
+
     with open(file_path, 'r') as f:
+        # This beginning part is (mostly) quite simple. Each if / elif just parses a normal line of data from our .obj
         for line in f:
+            # This is the part that parses the mtl files,
+            # since this is another file, we have another function that does the heavy lifting for us.
             if line.startswith('mtllib '):
                 materials.extend(load_mat(Path("models") / f"{line[7:-1]}"))
             elif line.startswith('v '):
@@ -75,8 +80,48 @@ def load_obj(file_path):
                 tmp = tmp.split(" ")
                 for n in tmp:
                     textures.append(float(n))
+
+            # Now here's where things get interesting:
+            # We start by finding which texture is current
             elif line.startswith('usemtl '):
-                pass #TODO: figure out how to do this next bit
+                current_mat = line[7:-1]
+            # Then we start processing faces
+            elif line.startswith('f '):
+                tmp = line[2:-1]
+                tmp = tmp.split(' ')
+
+                triangle_list = []
+                
+                first = tmp[0]
+                prev = None
+
+                # We cannot pass n-gons to OpenGL so we do fan triangularization to the potential n-gons
+                for cur in tmp:
+                    if prev == None:
+                        prev = cur
+                        continue
+                    elif first == prev:
+                        prev = cur
+                        continue
+                    triangle_list.append([first, prev, cur])
+                    prev = cur
+                
+                for triangle in triangle_list:
+                    tmpvert = []
+                    tmpnorm = []
+                    tmptex = []
+                    for vert in triangle:
+                        vert = vert.split('/')
+                        tmpvert.append(vert[0])
+                        tmptex.append(vert[1])
+                        tmpnorm.append(vert[2])
+                    faces.append([tmpvert, tmptex, tmpnorm, current_mat])
+                    print(faces)
+
+                # TODO: Write code to parse the vertex data
+                pass
+
+
         pass
 
 
