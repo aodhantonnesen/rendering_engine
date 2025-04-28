@@ -22,15 +22,33 @@ from pathlib import Path
 # or hardcode it with simple values
 
 def material_as_list(materials, name):
-    pass
+    for mat in materials:
+        mat = str(mat)
+        if not mat.startswith('newmtl,' + name):
+            continue
+        tmp = mat.split(',')
+        Ns = tmp[3]
+        KaX, KaY, KaZ = tmp[5], tmp[6], tmp[7]
+        KdX, KdY, KdZ = tmp[9], tmp[10], tmp[11]
+        KsX, KsY, KsZ = tmp[13], tmp[14], tmp[15]
+        KeX, KeY, KeZ = tmp[17], tmp[18], tmp[19]
+        Ni = tmp[21]
+        d = tmp[23]
+
+        return [Ns, KaX, KaY, KaZ, KdX, KdY, KdZ, KsX, KsY, KsZ, KeX, KeY, KeZ, Ni, d]
+    
+    raise ValueError('Name value provided not found in materials string!')
 
 def interleave(vertices, textures, normals, faces, materials):
     # We want the interleave to be in the following format:
     # v0, t0, n0, Ns0, KaR0, KaG0, KaB0, KdR0, KdG0, KdB0, KsR0, KsG0, KsB0, KeR0, KeG0, KeB0, Ni0, d0, v1, t1...
     # most of this data is not useful at the moment, but we will parse it all so we don't have to come back
+
+    material_as_list(materials, "Blue")
+
     for face in faces:
         for i in range(3):
-            print(i)
+            pass
         pass
     pass
 
