@@ -1,4 +1,3 @@
-import numpy as np
 from pathlib import Path
 
 # This file should have 2 major functions that can be called. The first will take the following input(s):
@@ -21,36 +20,70 @@ from pathlib import Path
 # is so that we can (temporarily) pretend some of this data (that we should be parsing) is not there
 # or hardcode it with simple values
 
-def material_as_list(materials, name):
+
+def material_as_list(materials: str, name): # Done, do not change
     for mat in materials:
-        mat = str(mat)
         if not mat.startswith('newmtl,' + name):
             continue
         tmp = mat.split(',')
-        Ns = tmp[3]
-        KaX, KaY, KaZ = tmp[5], tmp[6], tmp[7]
-        KdX, KdY, KdZ = tmp[9], tmp[10], tmp[11]
-        KsX, KsY, KsZ = tmp[13], tmp[14], tmp[15]
-        KeX, KeY, KeZ = tmp[17], tmp[18], tmp[19]
-        Ni = tmp[21]
-        d = tmp[23]
+        Ns = float(tmp[3])
+        KaX, KaY, KaZ = float(tmp[5]), float(tmp[6]), float(tmp[7])
+        KdX, KdY, KdZ = float(tmp[9]), float(tmp[10]), float(tmp[11])
+        KsX, KsY, KsZ = float(tmp[13]), float(tmp[14]), float(tmp[15])
+        KeX, KeY, KeZ = float(tmp[17]), float(tmp[18]), float(tmp[19])
+        Ni = float(tmp[21])
+        d = float(tmp[23])
 
         return [Ns, KaX, KaY, KaZ, KdX, KdY, KdZ, KsX, KsY, KsZ, KeX, KeY, KeZ, Ni, d]
     
     raise ValueError('Name value provided not found in materials string!')
 
-def interleave(vertices, textures, normals, faces, materials):
+
+def interleave(vertices, textures, normals, faces, materials):  # Works
     # We want the interleave to be in the following format:
     # v0, t0, n0, Ns0, KaR0, KaG0, KaB0, KdR0, KdG0, KdB0, KsR0, KsG0, KsB0, KeR0, KeG0, KeB0, Ni0, d0, v1, t1...
     # most of this data is not useful at the moment, but we will parse it all so we don't have to come back
 
-    material_as_list(materials, "Blue")
+    interleaved = []
 
     for face in faces:
         for i in range(3):
-            pass
-        pass
-    pass
+            interleaved.append(vertices[int(face[0][i])])
+            interleaved.append(textures[int(face[1][i])])
+            interleaved.append(normals[int(face[2][i])])
+            interleaved.extend(material_as_list(materials, face[3]))
+    
+    return interleaved
+
+
+def load_mat(file_path: Path):                  # This was tested, works beautifully. DO NOT CHANGE WITHOUT TESTING
+    materials = []
+
+    mat_string = ""
+
+    with open(file_path, 'r') as f:
+        for line in f:
+            if line.startswith("illum "):       # starting with the end here
+                materials.append(mat_string)    # throw the string we've made into the list
+            elif line.startswith("newmtl "):    # this will be the first thing we care about, new material
+                mat_string = ""                 # reset the string we will append to the list
+                mat_string += "newmtl,"         
+                mat_string += line[7:-1]        # adding the name of the new material to the string
+                mat_string += ","               
+            elif line.startswith(" "):          # null case
+                continue
+            elif line.startswith("#"):          # comment
+                continue
+            elif line.startswith('\n'):         # null case
+                continue
+            else:                               # data that isn't the beginning of a new material
+                tmp = line[:-1]
+                tmp = tmp.split(" ")            # split the string
+                for sub in tmp:                 
+                    mat_string += sub           # add it to the string
+                    mat_string += ","
+    
+    return materials
 
 
 def load_obj(file_path):
@@ -151,40 +184,10 @@ def load_obj(file_path):
     return vertices, textures, normals, faces, materials
 
 
-def load_mat(file_path):                        # This was tested, works beautifully. DO NOT CHANGE WITHOUT TESTING
-    materials = []
+def load_model(name: str) -> list:   # This function should be the function that is called from outside.
+    """This function taken an input of a .obj file name (without the file extension) and returns an interleaved list. \n
+    The list contains the ordered data for each vertex of each triangle in the model. \n
+    Format: v0, t0, n0, Ns0, KaR0, KaG0, KaB0, KdR0, KdG0, KdB0, KsR0, KsG0, KsB0, KeR0, KeG0, KeB0, Ni0, d0, v1, t1..."""
+    a ,b ,c, d, e = load_obj(Path("models") / f"{name}.obj")
+    return interleave(a, b, c, d, e)
 
-    mat_string = ""
-
-    with open(file_path, 'r') as f:
-        for line in f:
-            if line.startswith("illum "):       # starting with the end here
-                materials.append(mat_string)    # throw the string we've made into the list
-            elif line.startswith("newmtl "):    # this will be the first thing we care about, new material
-                mat_string = ""                 # reset the string we will append to the list
-                mat_string += "newmtl,"         
-                mat_string += line[7:-1]        # adding the name of the new material to the string
-                mat_string += ","               
-            elif line.startswith(" "):          # null case
-                continue
-            elif line.startswith("#"):          # comment
-                continue
-            elif line.startswith('\n'):         # null case
-                continue
-            else:                               # data that isn't the beginning of a new material
-                tmp = line[:-1]
-                tmp = tmp.split(" ")            # split the string
-                for sub in tmp:                 
-                    mat_string += sub           # add it to the string
-                    mat_string += ","
-    
-    return materials
-
-
-def load_model(name):   # This function should be the function that is called from outside.
-    return load_obj(Path("models") / f"{name}.obj") # TODO: change this such that it calls another function with the return of load_obj, not just return load_obj's return
-
-
-a ,b ,c, d, e = load_model("Cube")
-
-interleave(a, b, c, d, e)
