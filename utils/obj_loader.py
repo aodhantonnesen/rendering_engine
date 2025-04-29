@@ -1,3 +1,4 @@
+import numpy as np
 from pathlib import Path
 
 # This file should have 2 major functions that can be called. The first will take the following input(s):
@@ -53,6 +54,8 @@ def interleave(vertices, textures, normals, faces, materials):  # Works
             interleaved.append(normals[int(face[2][i])])
             interleaved.extend(material_as_list(materials, face[3]))
     
+    nparr = np.array(list(interleaved), dtype='float32')
+
     return interleaved
 
 
@@ -185,9 +188,8 @@ def load_obj(file_path):
 
 
 def load_model(name: str) -> list:   # This function should be the function that is called from outside.
-    """This function taken an input of a .obj file name (without the file extension) and returns an interleaved list. \n
-    The list contains the ordered data for each vertex of each triangle in the model. \n
+    """This function taken an input of a .obj file name (without the file extension) and returns an interleaved numpy array. \n
+    The array contains the ordered data for each vertex of each triangle in the model. \n
     Format: v0, t0, n0, Ns0, KaR0, KaG0, KaB0, KdR0, KdG0, KdB0, KsR0, KsG0, KsB0, KeR0, KeG0, KeB0, Ni0, d0, v1, t1..."""
     a ,b ,c, d, e = load_obj(Path("models") / f"{name}.obj")
     return interleave(a, b, c, d, e)
-
