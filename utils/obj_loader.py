@@ -1,4 +1,5 @@
 import numpy as np
+import numpy.typing as npt
 from pathlib import Path
 
 # This file should have 2 major functions that can be called. The first will take the following input(s):
@@ -40,23 +41,21 @@ def material_as_list(materials: str, name): # Done, do not change
     raise ValueError('Name value provided not found in materials string!')
 
 
-def interleave(vertices, textures, normals, faces, materials):  # Works
+def interleave(vertices, textures, normals, faces, materials):
     # We want the interleave to be in the following format:
-    # v0, t0, n0, Ns0, KaR0, KaG0, KaB0, KdR0, KdG0, KdB0, KsR0, KsG0, KsB0, KeR0, KeG0, KeB0, Ni0, d0, v1, t1...
+    # vX0, vY0, vZ0, tU0, tV0, nX0, nY0, nZ0, Ns0, KaR0, KaG0, KaB0, KdR0, KdG0, KdB0, KsR0, KsG0, KsB0, KeR0, KeG0, KeB0, Ni0, d0, v1, t1...
     # most of this data is not useful at the moment, but we will parse it all so we don't have to come back
-
     interleaved = []
 
     for face in faces:
         for i in range(3):
-            interleaved.append(vertices[int(face[0][i])])
-            interleaved.append(textures[int(face[1][i])])
-            interleaved.append(normals[int(face[2][i])])
+            interleaved.extend(vertices[int(face[0][i])-1])
+            interleaved.extend(textures[int(face[1][i])-1])
+            interleaved.extend(normals[int(face[2][i])-1])
             interleaved.extend(material_as_list(materials, face[3]))
     
     nparr = np.array(list(interleaved), dtype='float32')
-
-    return interleaved
+    return nparr
 
 
 def load_mat(file_path: Path):                  # This was tested, works beautifully. DO NOT CHANGE WITHOUT TESTING
@@ -136,18 +135,21 @@ def load_obj(file_path):
             elif line.startswith('v '):
                 tmp = line[2:]
                 tmp = tmp.split(" ")
-                for n in tmp:
-                    vertices.append(float(n))
+                for i in range(3):
+                    tmp[i] = float(tmp[i])
+                vertices.append(tmp)
             elif line.startswith('vn '):
                 tmp = line[3:]
                 tmp = tmp.split(" ")
-                for n in tmp:
-                    normals.append(float(n))
+                for i in range(3):
+                    tmp[i] = float(tmp[i])
+                normals.append(tmp)
             elif line.startswith('vt '):
                 tmp = line[3:]
                 tmp = tmp.split(" ")
-                for n in tmp:
-                    textures.append(float(n))
+                for i in range(2):
+                    tmp[i] = float(tmp[i])
+                textures.append(tmp)
 
             # Now here's where things get interesting:
             # We start by finding which texture is current
@@ -187,9 +189,12 @@ def load_obj(file_path):
     return vertices, textures, normals, faces, materials
 
 
-def load_model(name: str) -> list:   # This function should be the function that is called from outside.
+def load_model(name: str) -> npt.NDArray[any]:   # This function should be the function that is called from outside.
     """This function taken an input of a .obj file name (without the file extension) and returns an interleaved numpy array. \n
     The array contains the ordered data for each vertex of each triangle in the model. \n
-    Format: v0, t0, n0, Ns0, KaR0, KaG0, KaB0, KdR0, KdG0, KdB0, KsR0, KsG0, KsB0, KeR0, KeG0, KeB0, Ni0, d0, v1, t1..."""
+    Format: vX0, vY0, vZ0, tU0, tV0, nX0, nY0, nZ0, Ns0, KaR0, KaG0, KaB0, KdR0, KdG0, KdB0, KsR0, KsG0, KsB0, KeR0, KeG0, KeB0, Ni0, d0, v1, t1... \n
+    NOTE: .mtl files ABSOLUTELY MUST HAVE PROPERTIES IN THE CORRECT ORDER, as defined above ^"""
     a ,b ,c, d, e = load_obj(Path("models") / f"{name}.obj")
     return interleave(a, b, c, d, e)
+
+load_model("Cube")
